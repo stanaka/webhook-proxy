@@ -1,10 +1,7 @@
-[auth]
-Id = "basic"
-Password = "password"
+Port = 18080
 
-[webhook]
+[relay]
 Path = "/github"
 Name = "GitHub"
 Type = "webhook"
-EndPoint = "http://localhost/..."
-Format = ""
+EndPoint = "http://localhost:18090/relay"
