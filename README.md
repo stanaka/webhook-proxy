@@ -1,4 +1,4 @@
-webhook-proxy
+webhook-proxy [![Build Status](https://travis-ci.org/stanaka/webhook-proxy.svg?branch=master)](https://travis-ci.org/stanaka/webhook-proxy)
 =============
 
 written in Go-lang
