@@ -1,0 +1,10 @@
+[auth]
+Id = "basic"
+Password = "password"
+
+[webhook]
+Path = "/github"
+Name = "GitHub"
+Type = "webhook"
+EndPoint = "http://localhost/..."
+Format = ""
