@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/golang/glog"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	//"html"
@@ -14,63 +14,68 @@ import (
 
 type tomlConfig struct {
 	Port  int
-	Relay relayInfo
+	Relay map[string]relayInfo
 }
 
 type relayInfo struct {
-	Name     string
-	Type     string
+	Path     string
 	EndPoint string
 }
 
 var config tomlConfig
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("%s", r.URL.Path)
+	glog.Infof("%s", r.URL.Path)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Err: %s", err)
+		glog.Errorf("Err: %s", err)
 	}
 
 	for h := range r.Header {
 		for v := range r.Header[h] {
-			log.Printf("Header: %s: %s", h, r.Header[h][v])
+			glog.Infof("Header: %s: %s", h, r.Header[h][v])
 		}
 	}
-	log.Printf("Body: %s", body)
-	log.Printf("EndPoint: %s", config.Relay.EndPoint)
-	log.Printf("Method: %s", r.Method)
+	glog.Infof("Method: %s", r.Method)
+	glog.Infof("Path: %s", r.URL.Path)
+	glog.Infof("Body: %s", body)
 
 	fmt.Fprintf(w, "OK\n")
-	if config.Relay.EndPoint == "" {
+	var endpoint string
+	for e := range config.Relay {
+		if r.URL.Path == config.Relay[e].Path {
+			endpoint = config.Relay[e].EndPoint
+			break
+		}
+	}
+	glog.Infof("EndPoint: %s", endpoint)
+	if endpoint == "" {
 		return
 	}
 
-	req, err := http.NewRequest(r.Method,
-		config.Relay.EndPoint, bytes.NewReader(body))
+	req, err := http.NewRequest(r.Method, endpoint, bytes.NewReader(body))
 	if err != nil {
-		log.Printf("Err: %s", err)
+		glog.Errorf("Err: %s", err)
 	}
 	req.Header = r.Header
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Err: %s", err)
+		glog.Errorf("Err: %s", err)
 	}
 	defer resp.Body.Close()
 	relay_body, err := ioutil.ReadAll(resp.Body)
-	log.Printf("Relay Body: %s", relay_body)
+	glog.Infof("Relay Body: %s", relay_body)
 }
 
 func main() {
 	var conffile = flag.String("conf", "", "Configuration File")
 	flag.Parse()
-
-	log.Printf("Config file: %s", *conffile)
+	glog.Infof("Config file: %s", *conffile)
 
 	if *conffile != "" {
 		if _, err := toml.DecodeFile(*conffile, &config); err != nil {
-			panic(err)
+			glog.Fatalf("Error on decoding config file: %s", err)
 		}
 	}
 
@@ -80,5 +85,5 @@ func main() {
 	}
 	http.HandleFunc("/", topHandler)
 	http.ListenAndServe(":"+strconv.Itoa(port), nil)
-	log.Print("Shutting down..")
+	glog.Error("Shutting down..")
 }

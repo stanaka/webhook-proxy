@@ -1,7 +1,7 @@
 Port = 18080
 
 [relay]
+
+[relay.github]
 Path = "/github"
-Name = "GitHub"
-Type = "webhook"
 EndPoint = "http://localhost:18090/relay"
